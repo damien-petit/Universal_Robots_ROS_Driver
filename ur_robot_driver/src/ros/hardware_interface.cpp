@@ -25,6 +25,10 @@
  */
 //----------------------------------------------------------------------
 
+#include <joint_limits_interface/joint_limits.h>
+#include <joint_limits_interface/joint_limits_urdf.h>
+#include <joint_limits_interface/joint_limits_rosparam.h>
+
 #include "ur_robot_driver/ros/hardware_interface.h"
 #include "ur_robot_driver/ur/tool_communication.h"
 #include <ur_robot_driver/exceptions.h>
@@ -237,10 +241,19 @@ bool HardwareInterface ::init(ros::NodeHandle& root_nh, ros::NodeHandle& robot_h
                              "'controller_joint_names' on the parameter server.");
   }
 
+  joint_limits_interface::JointLimits limits;
+  joint_limits_interface::SoftJointLimits soft_limits;
+
+
   // Create ros_control interfaces
   for (std::size_t i = 0; i < joint_positions_.size(); ++i)
   {
     ROS_DEBUG_STREAM("Registing handles for joint " << joint_names_[i]);
+    if(!getJointLimits(joint_names_[i], robot_hw_nh, limits))
+    {
+      ROS_FATAL_STREAM("Could not find joint limits for joint " << joint_names_[i] << " on parameter server.");
+      return false;
+    }
     // Create joint state interface for all joints
     js_interface_.registerHandle(hardware_interface::JointStateHandle(joint_names_[i], &joint_positions_[i],
                                                                       &joint_velocities_[i], &joint_efforts_[i]));
@@ -252,6 +265,8 @@ bool HardwareInterface ::init(ros::NodeHandle& root_nh, ros::NodeHandle& robot_h
         hardware_interface::JointHandle(js_interface_.getHandle(joint_names_[i]), &joint_velocity_command_[i]));
     spj_interface_.registerHandle(ur_controllers::ScaledJointHandle(
         js_interface_.getHandle(joint_names_[i]), &joint_position_command_[i], &speed_scaling_combined_));
+    vel_limit_interface_.registerHandle(joint_limits_interface::VelocityJointSoftLimitsHandle(
+        vj_interface_.getHandle(joint_names_[i]), limits, soft_limits));
   }
 
   speedsc_interface_.registerHandle(
@@ -428,6 +443,7 @@ void HardwareInterface ::write(const ros::Time& time, const ros::Duration& perio
     }
     else if (velocity_controller_running_)
     {
+      vel_limit_interface_.enforceLimits(period);
       ur_driver_->writeJointCommand(joint_velocity_command_, comm::ControlMode::MODE_SPEEDJ);
     }
     else

@@ -27,18 +27,20 @@
 #ifndef UR_DRIVER_HARDWARE_INTERFACE_H_INCLUDED
 #define UR_DRIVER_HARDWARE_INTERFACE_H_INCLUDED
 
-#include <hardware_interface/robot_hw.h>
+#include <algorithm>
+
 #include <hardware_interface/force_torque_sensor_interface.h>
 #include <hardware_interface/joint_command_interface.h>
 #include <hardware_interface/joint_state_interface.h>
-#include <algorithm>
+#include <hardware_interface/robot_hw.h>
+#include <joint_limits_interface/joint_limits_interface.h>
+#include <realtime_tools/realtime_publisher.h>
 #include <std_msgs/Bool.h>
 #include <std_msgs/Float64.h>
 #include <std_msgs/String.h>
 #include <std_srvs/Trigger.h>
-#include <realtime_tools/realtime_publisher.h>
-#include "tf2_msgs/TFMessage.h"
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
+#include <tf2_msgs/TFMessage.h>
 
 #include <ur_msgs/IOStates.h>
 #include <ur_msgs/ToolDataMsg.h>
@@ -197,6 +199,7 @@ protected:
   ur_controllers::SpeedScalingInterface speedsc_interface_;
   hardware_interface::VelocityJointInterface vj_interface_;
   hardware_interface::ForceTorqueSensorInterface fts_interface_;
+  joint_limits_interface::VelocityJointSoftLimitsInterface vel_limit_interface_;
 
   vector6d_t joint_position_command_;
   vector6d_t joint_velocity_command_;

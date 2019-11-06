@@ -8,6 +8,7 @@
 
   <arg name="use_tool_communication" doc="On e-Series robots tool communication can be enabled with this argument"/>
   <arg name="controller_config_file" doc="Config file used for defining the ROS-Control controllers."/>
+  <arg name="limits_config_file" default="$(find ur_robot_driver)/config/ur10e_limits.yaml"/>
   <arg name="robot_ip" doc="IP address by which the robot can be reached."/>
   <arg name="kinematics_config" doc="Kinematics config file used for calibration correction. This will be used to verify the robot's calibration is matching the robot_description. Pass the same config file that is passed to the robot_description."/>
   <arg name="tf_prefix" default="" doc="tf_prefix used for the robot."/>
@@ -54,6 +55,7 @@
 
   <!-- Load controller settings -->
   <rosparam file="$(arg controller_config_file)" command="load"/>
+  <rosparam file="$(arg limits_config_file)" command="load" ns="ur_hardware_interface"/>
 
   <!-- spawn controller manager -->
   <node name="ros_control_controller_spawner" pkg="controller_manager" type="spawner" respawn="false"
